@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"net/http"
+	"strconv"
 )
 
 func newPool() *redis.Pool {
@@ -33,10 +34,19 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	referer := r.URL.Query().Get("referrer")
+	website := r.URL.Query().Get("w")
 	tag := r.URL.Query().Get("tag")
 
-	saveToRedis(source, campaign, tag, status, referer)
+	// Additional checking
+	if tag == "false" {
+		tag = ""
+	}
+
+	if _, err := strconv.Atoi(status); err != nil {
+		status = "901"
+	}
+
+	saveToRedis(source, campaign, tag, status, website)
 
 	imageResponse(w)
 }
