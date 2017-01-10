@@ -59,7 +59,10 @@ func saveToRedis(source string, campaign string, tag string, status string, webs
 
 	if tag != "" {
 		value += ":tag:" + tag
-		c.Do("HINCRBY", "tag_requests", tag, 1)
+
+		if source == "tag" {
+			c.Do("HINCRBY", "tag_requests", tag, 1); err != nil
+		}
 	}
 
 	if website != "" {
@@ -84,6 +87,7 @@ func imageResponse(w http.ResponseWriter) {
 }
 
 func main() {
+	fmt.Println("Starting Go tracker...")
 	http.HandleFunc("/", handleTrackRequest)
 	http.ListenAndServe(":5000", nil)
 }
