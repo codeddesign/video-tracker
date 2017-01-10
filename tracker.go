@@ -88,6 +88,6 @@ func imageResponse(w http.ResponseWriter) {
 
 func main() {
 	fmt.Println("Starting Go tracker...")
-	http.HandleFunc("/", handleTrackRequest)
+	http.HandleFunc("/track", handleTrackRequest)
 	http.ListenAndServe(":5000", nil)
 }
