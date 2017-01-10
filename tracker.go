@@ -61,7 +61,7 @@ func saveToRedis(source string, campaign string, tag string, status string, webs
 		value += ":tag:" + tag
 
 		if source == "tag" {
-			c.Do("HINCRBY", "tag_requests", tag, 1); err != nil
+			c.Do("HINCRBY", "tag_requests", tag, 1)
 		}
 	}
 
