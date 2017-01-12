@@ -28,9 +28,10 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	campaign := r.URL.Query().Get("campaign")
 	source := r.URL.Query().Get("source")
 	status := r.URL.Query().Get("status")
+	rd := r.URL.Query().Get("_rd")
 
 	// Required parameters
-	if campaign == "" || source == "" || status == "" {
+	if campaign == "" || source == "" || status == "" || rd == "" {
 		return
 	}
 
