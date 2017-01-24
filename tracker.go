@@ -34,7 +34,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	tag := r.URL.Query().Get("tag")
 
 	campaignRequiredParams := campaign != "" && source != "" && status != "" && rd != ""
-	analyticsRequiredParams := source == "visit" && platform != "" && website != "" && rd != ""
+	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
 
 	// Required parameters
 	if !campaignRequiredParams && !analyticsRequiredParams {
