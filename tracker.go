@@ -29,16 +29,43 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	source := r.URL.Query().Get("source")
 	status := r.URL.Query().Get("status")
 	rd := r.URL.Query().Get("_rd")
-
-	// Required parameters
-	if campaign == "" || source == "" || status == "" || rd == "" {
-		return
-	}
-
+	platform := r.URL.Query().Get("platform")
 	website := r.URL.Query().Get("w")
 	tag := r.URL.Query().Get("tag")
 
-	// Additional checking
+	campaignRequiredParams := campaign != "" && source != "" && status != "" && rd != ""
+	analyticsRequiredParams := source == "visit" && platform != "" && website != "" && rd != ""
+
+	// Required parameters
+	if !campaignRequiredParams && !analyticsRequiredParams {
+		return
+	}
+
+	if campaignRequiredParams {
+		saveCampaignToRedis(source, campaign, tag, status, website)
+	}
+
+	if analyticsRequiredParams {
+		saveAnalyticsToRedis(website, platform)
+	}
+
+	imageResponse(w)
+}
+
+func saveAnalyticsToRedis(website string, platform string) {
+	c := pool.Get()
+	defer c.Close()
+
+	value := "platform:" + platform
+
+	c.Do("HINCRBY", "website:"+website, value, 1)
+	c.Do("HINCRBY", "daily-website:"+website, value, 1)
+}
+
+func saveCampaignToRedis(source string, campaign string, tag string, status string, website string) {
+	c := pool.Get()
+	defer c.Close()
+
 	if tag == "false" {
 		tag = ""
 	}
@@ -46,15 +73,6 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	if _, err := strconv.Atoi(status); err != nil {
 		status = "901"
 	}
-
-	saveToRedis(source, campaign, tag, status, website)
-
-	imageResponse(w)
-}
-
-func saveToRedis(source string, campaign string, tag string, status string, website string) {
-	c := pool.Get()
-	defer c.Close()
 
 	value := "source:" + source + ":status:" + status
 
