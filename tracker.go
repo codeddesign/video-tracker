@@ -41,6 +41,14 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, err := strconv.Atoi(website); err != nil {
+		website = ""
+	}
+
+	if website == "0" {
+		website = ""
+	}
+
 	if campaignRequiredParams {
 		saveCampaignToRedis(source, campaign, tag, status, website)
 	}
@@ -56,11 +64,7 @@ func saveAnalyticsToRedis(website string, platform string) {
 	c := pool.Get()
 	defer c.Close()
 
-	if _, err := strconv.Atoi(website); err != nil {
-		return
-	}
-
-	if website == "0" {
+	if website == "" {
 		return
 	}
 
