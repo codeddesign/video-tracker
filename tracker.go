@@ -71,7 +71,6 @@ func saveAnalyticsToRedis(website string, platform string) {
 	value := "platform:" + platform
 
 	c.Do("HINCRBY", "website:"+website, value, 1)
-	c.Do("HINCRBY", "daily-website:"+website, value, 1)
 }
 
 func saveCampaignToRedis(source string, campaign string, tag string, status string, website string) {
@@ -101,7 +100,6 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 	}
 
 	c.Do("HINCRBY", "campaign:"+campaign, value, 1)
-	c.Do("HINCRBY", "daily-campaign:"+campaign, value, 1)
 }
 
 func imageResponse(w http.ResponseWriter) {
