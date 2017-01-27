@@ -56,6 +56,14 @@ func saveAnalyticsToRedis(website string, platform string) {
 	c := pool.Get()
 	defer c.Close()
 
+	if _, err := strconv.Atoi(website); err != nil {
+		return
+	}
+
+	if website == "0" {
+		return
+	}
+
 	value := "platform:" + platform
 
 	c.Do("HINCRBY", "website:"+website, value, 1)
