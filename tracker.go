@@ -4,8 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
+    "github.com/joho/godotenv"
 	"net/http"
 	"strconv"
+    "log"
+    "os"
 )
 
 func newPool() *redis.Pool {
@@ -13,7 +16,7 @@ func newPool() *redis.Pool {
 		MaxIdle:   50,
 		MaxActive: 10000,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", ":6379")
+			c, err := redis.DialURL(os.Getenv("REDIS_CONNECTION"))
 			if err != nil {
 				panic(err.Error())
 			}
@@ -117,6 +120,12 @@ func imageResponse(w http.ResponseWriter) {
 
 func main() {
 	fmt.Println("Starting Go tracker...")
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	http.HandleFunc("/track", handleTrackRequest)
 	http.ListenAndServe(":5000", nil)
 }
