@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-    "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
-    "log"
-    "os"
 )
 
 func newPool() *redis.Pool {
