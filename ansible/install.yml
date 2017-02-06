@@ -1,0 +1,5 @@
+---
+  - hosts: ad3production
+    become: yes
+    roles:
+      - joshualund.golang

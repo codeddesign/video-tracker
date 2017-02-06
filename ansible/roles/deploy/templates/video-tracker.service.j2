@@ -1,0 +1,14 @@
+[Unit]
+Description=video-tracker Golang
+ConditionPathExists=/home/forge/video-tracker/bin/video-tracker
+
+[Service]
+User=forge
+Group=forge
+Restart=always
+RestartSec=3
+WorkingDirectory=/home/forge/video-tracker/bin
+ExecStart=/home/forge/video-tracker/bin/video-tracker
+
+[Install]
+WantedBy=multi-user.target

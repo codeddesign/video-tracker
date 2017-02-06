@@ -1,0 +1,10 @@
+---
+
+# Application settings.
+root_application_path: "/home/forge"
+
+goapp_path: "{{ root_application_path }}/video-tracker"
+
+goapp_environment:
+  GOBIN: "{{ goapp_path }}/bin"
+  GOPATH: "/home/forge/go"

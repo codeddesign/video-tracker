@@ -1,0 +1,5 @@
+---
+  - hosts: ad3production
+    become: no
+    roles:
+      - deploy
