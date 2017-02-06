@@ -1,5 +1,5 @@
 make:
-	go build -o bin/tracker
+	go get
 
 run:
-	./bin/tracker
+	./bin/video-tracker
