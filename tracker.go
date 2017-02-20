@@ -12,7 +12,7 @@ import (
 )
 
 func newPool() *redis.Pool {
-	return &redis.Pool{
+	return &redis.Pool {
 		MaxIdle:   50,
 		MaxActive: 10000,
 		Dial: func() (redis.Conn, error) {
@@ -31,12 +31,12 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	campaign := r.URL.Query().Get("campaign")
 	source := r.URL.Query().Get("source")
 	status := r.URL.Query().Get("status")
-	rd := r.URL.Query().Get("_rd")
+	//rd := r.URL.Query().Get("_rd")
 	platform := r.URL.Query().Get("platform")
 	website := r.URL.Query().Get("w")
 	tag := r.URL.Query().Get("tag")
 
-	campaignRequiredParams := campaign != "" && source != "" && status != "" && rd != ""
+	campaignRequiredParams := campaign != "" && source != "" && status != ""// && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
 
 	// Required parameters
