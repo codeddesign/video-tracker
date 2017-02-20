@@ -48,7 +48,6 @@ func newPool() *redis.Pool {
 			c, err := redis.DialURL(cfg.RedisConnection)
 			if err != nil {
 				raven.CaptureError(err, nil)
-				panic(err.Error())
 			}
 			return c, err
 		},
