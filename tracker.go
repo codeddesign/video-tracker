@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/caarlos0/env"
 	"github.com/garyburd/redigo/redis"
+	"github.com/getsentry/raven-go"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -17,14 +18,14 @@ type config struct {
 	RedisPoolMaxActive int           `env:"REDIS_POOL_MAX_ACTIVE"`
 	RedisPoolTimeout   time.Duration `env:"REDIS_POOL_TIMEOUT"`
 	RedisConnection    string        `env:"REDIS_CONNECTION"`
+	SentryDsn          string        `env:"SENTRY_DSN"`
 }
 
 const (
 	servtimeout = time.Duration(15 * time.Second)
 )
 
-func newPool() *redis.Pool {
-
+func getConfig() *config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -34,8 +35,10 @@ func newPool() *redis.Pool {
 	if errParse != nil {
 		fmt.Printf("%+v\n", err)
 	}
-	fmt.Printf("%+v\n", cfg)
+	return &cfg
+}
 
+func newPool() *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     cfg.RedisPoolMaxIdle,
 		MaxActive:   cfg.RedisPoolMaxActive,
@@ -44,13 +47,15 @@ func newPool() *redis.Pool {
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.DialURL(cfg.RedisConnection)
 			if err != nil {
-				panic(err.Error())
+				raven.CaptureErrorAndWait(err, nil)
+    			log.Panic(err)
 			}
 			return c, err
 		},
 	}
 }
 
+var cfg = getConfig()
 var pool = newPool()
 
 func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
@@ -146,6 +151,9 @@ func imageResponse(w http.ResponseWriter) {
 
 func main() {
 	fmt.Println("Starting Go tracker...")
+	fmt.Printf("%+v\n", cfg)
+
+	raven.SetDSN(cfg.SentryDsn)
 
 	http.Handle("/track", http.TimeoutHandler(http.HandlerFunc(handleTrackRequest), servtimeout, ""))
 
