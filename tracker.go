@@ -3,20 +3,46 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/caarlos0/env"
 	"github.com/garyburd/redigo/redis"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
+	"time"
+)
+
+type config struct {
+	RedisPoolMaxIdle   int           `env:"REDIS_POOL_MAX_IDLE"`
+	RedisPoolMaxActive int           `env:"REDIS_POOL_MAX_ACTIVE"`
+	RedisPoolTimeout   time.Duration `env:"REDIS_POOL_TIMEOUT"`
+	RedisConnection    string        `env:"REDIS_CONNECTION"`
+}
+
+const (
+	servtimeout = time.Duration(15 * time.Second)
 )
 
 func newPool() *redis.Pool {
-	return &redis.Pool {
-		MaxIdle:   50,
-		MaxActive: 10000,
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	cfg := config{}
+	errParse := env.Parse(&cfg)
+	if errParse != nil {
+		fmt.Printf("%+v\n", err)
+	}
+	fmt.Printf("%+v\n", cfg)
+
+	return &redis.Pool{
+		MaxIdle:     cfg.RedisPoolMaxIdle,
+		MaxActive:   cfg.RedisPoolMaxActive,
+		Wait:        true,
+		IdleTimeout: cfg.RedisPoolTimeout * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.DialURL(os.Getenv("REDIS_CONNECTION"))
+			c, err := redis.DialURL(cfg.RedisConnection)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -36,7 +62,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	website := r.URL.Query().Get("w")
 	tag := r.URL.Query().Get("tag")
 
-	campaignRequiredParams := campaign != "" && source != "" && status != ""// && rd != ""
+	campaignRequiredParams := campaign != "" && source != "" && status != "" // && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
 
 	// Required parameters
@@ -121,11 +147,14 @@ func imageResponse(w http.ResponseWriter) {
 func main() {
 	fmt.Println("Starting Go tracker...")
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	http.Handle("/track", http.TimeoutHandler(http.HandlerFunc(handleTrackRequest), servtimeout, ""))
+
+	srv := &http.Server{
+		Addr:           ":5000",
+		ReadTimeout:    5 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
 
-	http.HandleFunc("/track", handleTrackRequest)
-	http.ListenAndServe(":5000", nil)
+	srv.ListenAndServe()
 }
