@@ -13,7 +13,9 @@ This Go app is deployed using [Ansible](https://www.ansible.com/).
 
 ### Install Golang
 
-To install Golang in the target servers, run: ```ansible-playbook install.yaml```
+To install Golang in the target servers, run: ```ansible-playbook install.yaml```.
+
+Be aware that passwordless sudo must be setup in order to install Go on the target servers.
 
 ### Deploy the video-tracker
 
