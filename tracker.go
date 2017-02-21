@@ -47,12 +47,15 @@ func newPool() *redis.Pool {
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.DialURL(cfg.RedisConnection)
 			if err != nil {
-            	raven.CaptureError(err, nil)
-            	return nil, err
+				raven.CaptureError(err, nil)
+				return nil, err
 			}
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if time.Since(t) < time.Minute {
+				return nil
+			}
 			_, err := c.Do("PING")
 			return err
 		},
