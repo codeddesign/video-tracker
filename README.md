@@ -21,4 +21,4 @@ Be aware that passwordless sudo must be setup in order to install Go on the targ
 
 To deploy this app, run: ```ansible-playbook deploy.yaml```
 
-The required ```.env``` file is **not** automatically deployed. It should be manually created after deployment in ```~/video-tracker/bin/.env``` and it should contain the ```REDIS_CONNECTION``` key.
+> The option `--ask-vault-pass` must be used with a valid password to decrypt the `secrets.yaml` file, which contains production information.
