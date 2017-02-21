@@ -1,10 +1,10 @@
 ---
 - hosts: ad3production
   vars_files:
-    - vars/datadog-api.yaml
+    - vars/secrets.yaml
   roles:
     - { role: Datadog.datadog, become: yes }
   vars:
-    datadog_api_key: "{{ api_key }}"
+    datadog_api_key: "{{ dd_api_key }}"
     datadog_config:
-      tags: "production"
+      tags: "env:production"

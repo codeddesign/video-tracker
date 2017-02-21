@@ -14,6 +14,10 @@
   command: chdir={{ goapp_path }} /usr/local/go/bin/go get
   environment: "{{ goapp_environment }}"
 
+- name: Set the environment variables
+  template: src=env.j2
+            dest={{ goapp_path }}/.env
+
 - name: Create the systemd service
   become: yes
   template: src=video-tracker.service.j2

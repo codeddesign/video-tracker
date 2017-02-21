@@ -1,5 +1,7 @@
 ---
   - hosts: ad3production
+    vars_files:
+      - vars/secrets.yaml
     become: no
     roles:
       - deploy
