@@ -11,9 +11,14 @@ This Go app is deployed using [Ansible](https://www.ansible.com/).
 3. A folder for custom roles should be created: ```mkdir ~/.ansible/roles``` and set in the config file ```/etc/ansible/ansible.cfg``` under the key ```roles_path```
 4. The golang role should be installed by running ```ansible-galaxy install joshualund.golang```.
 
+### Install Logentries
+
+To install the Logentries daemon, our log management system, run ```ansible-playbook logentries.yaml```.
+
 ### Install the Datadog Agent
 
 To install the Datadog agent, our monitoring service, run ```ansible-playbook datadog.yaml```.
+
 ### Install Golang
 
 To install Golang in the target servers, run: ```ansible-playbook install.yaml```.
