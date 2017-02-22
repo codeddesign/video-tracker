@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"expvar"
 	"fmt"
 	"github.com/caarlos0/env"
 	"github.com/garyburd/redigo/redis"
@@ -23,6 +24,10 @@ type config struct {
 
 const (
 	servtimeout = time.Duration(15 * time.Second)
+)
+
+var (
+	exp_events_processed = expvar.NewInt("events_processed")
 )
 
 func getConfig() *config {
@@ -98,6 +103,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 		saveAnalyticsToRedis(website, platform)
 	}
 
+	exp_events_processed.Add(1)
 	imageResponse(w)
 }
 
