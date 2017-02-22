@@ -15,9 +15,9 @@ import (
 )
 
 type RedisCommand struct {
-	Command string
-	Key string
-	Field string
+	Command   string
+	Key       string
+	Field     string
 	Increment int
 }
 
@@ -27,6 +27,7 @@ type config struct {
 	RedisPoolTimeout   time.Duration `env:"REDIS_POOL_TIMEOUT"`
 	RedisConnection    string        `env:"REDIS_CONNECTION"`
 	SentryDsn          string        `env:"SENTRY_DSN"`
+	PipelineSize       int           `env:"PIPELINE_SIZE"`
 }
 
 const (
@@ -122,7 +123,7 @@ func saveAnalyticsToRedis(website string, platform string) {
 
 	value := "platform:" + platform
 
-   	pipeline <- RedisCommand{"HINCRBY", "website:"+website, value, 1}
+	pipeline <- RedisCommand{"HINCRBY", "website:" + website, value, 1}
 }
 
 func saveCampaignToRedis(source string, campaign string, tag string, status string, website string) {
@@ -140,7 +141,7 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 		value += ":tag:" + tag
 
 		if source == "tag" {
-        	pipeline <- RedisCommand{"HINCRBY", "tag_requests", tag, 1}
+			pipeline <- RedisCommand{"HINCRBY", "tag_requests", tag, 1}
 		}
 	}
 
@@ -148,7 +149,7 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 		value += ":website:" + website
 	}
 
-   	pipeline <- RedisCommand{"HINCRBY", "campaign:"+campaign, value, 1}
+	pipeline <- RedisCommand{"HINCRBY", "campaign:" + campaign, value, 1}
 }
 
 func imageResponse(w http.ResponseWriter) {
@@ -167,27 +168,25 @@ func imageResponse(w http.ResponseWriter) {
 func redisPipeline(out chan RedisCommand) {
 	commands := make([]RedisCommand, 0)
 
-    for x := range out {
-        commands = append(commands, x)
-        fmt.Println(len(commands))
-        if len(commands) >= 5 {
-        	processRedisPipeline(commands)
-            commands = commands[:0]
-        }
-    }
+	for x := range out {
+		commands = append(commands, x)
+		if len(commands) >= cfg.PipelineSize {
+			processRedisPipeline(commands)
+			commands = commands[:0]
+		}
+	}
 }
 
 func processRedisPipeline(commands []RedisCommand) {
 	c := pool.Get()
 	defer c.Close()
 
-	fmt.Println("Processing...")
-	fmt.Println(commands)
-
 	c.Do("MULTI")
+
 	for _, command := range commands {
 		c.Do(command.Command, command.Key, command.Field, command.Increment)
 	}
+
 	c.Do("EXEC")
 }
 
@@ -195,7 +194,7 @@ func main() {
 	fmt.Println("Starting Go tracker...")
 	fmt.Printf("%+v\n", cfg)
 
-    go redisPipeline(pipeline)
+	go redisPipeline(pipeline)
 
 	raven.SetDSN(cfg.SentryDsn)
 
