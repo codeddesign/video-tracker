@@ -38,6 +38,10 @@ var (
 	exp_events_processed = expvar.NewInt("events_processed")
 )
 
+var (
+	exp_events_sent = expvar.NewInt("events_sent")
+)
+
 func getConfig() *config {
 	err := godotenv.Load()
 	if err != nil {
@@ -184,6 +188,7 @@ func processRedisPipeline(commands []RedisCommand) {
 	c.Do("MULTI")
 
 	for _, command := range commands {
+		exp_events_sent.Add(1)
 		c.Do(command.Command, command.Key, command.Field, command.Increment)
 	}
 
