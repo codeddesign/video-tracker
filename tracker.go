@@ -171,7 +171,7 @@ func redisPipeline(out chan RedisCommand) {
 	for x := range out {
 		commands = append(commands, x)
 		if len(commands) >= cfg.PipelineSize {
-			processRedisPipeline(commands)
+			go processRedisPipeline(commands)
 			commands = commands[:0]
 		}
 	}
