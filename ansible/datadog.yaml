@@ -8,3 +8,14 @@
     datadog_api_key: "{{ dd_api_key }}"
     datadog_config:
       tags: "env:production"
+    datadog_checks:
+      go_expvar:
+        init_config:
+        instances:
+          - expvar_url: http://localhost:5000/debug/vars
+            namespace: video-tracker
+            metrics:
+              - path: events_processed
+                type: rate
+              - path: events_pipelined
+                type: rate
