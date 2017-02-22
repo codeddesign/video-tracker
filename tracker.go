@@ -39,6 +39,10 @@ var (
 )
 
 var (
+	exp_events_pipelined = expvar.NewInt("events_pipelined")
+)
+
+var (
 	exp_events_sent = expvar.NewInt("events_sent")
 )
 
@@ -174,6 +178,7 @@ func redisPipeline(out chan RedisCommand) {
 
 	for x := range out {
 		commands = append(commands, x)
+		exp_events_pipelined.Add(1)
 		if len(commands) >= cfg.PipelineSize {
 			go processRedisPipeline(commands)
 			commands = commands[:0]
