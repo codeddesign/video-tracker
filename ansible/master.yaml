@@ -1,0 +1,6 @@
+---
+  - include: install.yaml
+  - include: deploy.yaml
+  - include: logentries.yaml
+  - include: datadog.yaml
+  - include: serverconf.yaml
