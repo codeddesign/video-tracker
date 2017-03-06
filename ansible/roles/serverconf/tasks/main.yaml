@@ -8,7 +8,7 @@
 
   - name: Copy nginx site config
     become: yes
-    template: src=nginx.conf.j2
+    template: src=ad3media.com.j2
               dest=/etc/nginx/sites-available/ad3media.com
 
   - name: Enable site config
