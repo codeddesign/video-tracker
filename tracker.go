@@ -98,9 +98,10 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 
 	campaignRequiredParams := campaign != "" && source != "" && status != "" // && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
+	backupRequiredParams := source == "backup" && campaign != "" && platform != ""
 
 	// Required parameters
-	if !campaignRequiredParams && !analyticsRequiredParams {
+	if !campaignRequiredParams && !analyticsRequiredParams && !backupRequiredParams {
 		return
 	}
 
@@ -120,6 +121,10 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 		saveAnalyticsToRedis(website, platform)
 	}
 
+	if backupRequiredParams {
+		//saveBackupToRedis(campaign, website)
+	}
+
 	exp_events_processed.Add(1)
 	imageResponse(w)
 }
@@ -132,6 +137,16 @@ func saveAnalyticsToRedis(website string, platform string) {
 	value := "platform:" + platform
 
 	pipeline <- RedisCommand{"HINCRBY", "website:" + website, value, 1}
+}
+
+func saveBackupToRedis(campaign string, website string) {
+	value := "source:backup"
+
+	if website != "" {
+		value += ":website:" + website
+	}
+
+	pipeline <- RedisCommand{"HINCRBY", "campaign:" + campaign, value, 1}
 }
 
 func saveCampaignToRedis(source string, campaign string, tag string, status string, website string) {
@@ -193,10 +208,10 @@ func processRedisPipeline(commands []RedisCommand) {
 	c.Do("MULTI")
 
 	for _, command := range commands {
-		exp_events_sent.Add(1)
 		c.Do(command.Command, command.Key, command.Field, command.Increment)
 	}
 
+	exp_events_sent.Add(1)
 	c.Do("EXEC")
 }
 
