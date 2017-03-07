@@ -1,6 +1,7 @@
 ---
+  - hosts: "{{ host | default('ad3production') }}"
   - include: install.yaml
   - include: deploy.yaml
+  - include: serverconf.yaml
   - include: logentries.yaml
   - include: datadog.yaml
-  - include: serverconf.yaml

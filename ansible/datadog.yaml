@@ -1,13 +1,13 @@
 ---
-- hosts: ad3production
+- hosts: "{{ host | default('ad3production') }}"
   vars_files:
-    - vars/secrets.yaml
+    - vars/{{ env | default('production') }}.yaml
   roles:
     - { role: Datadog.datadog, become: yes }
   vars:
     datadog_api_key: "{{ dd_api_key }}"
     datadog_config:
-      tags: "env:production"
+      tags: "env:{{ env | default('production') }}"
     datadog_checks:
       go_expvar:
         init_config:
@@ -19,3 +19,8 @@
                 type: rate
               - path: events_pipelined
                 type: rate
+      php_fpm:
+        init_config:
+        instances:
+          - status_url: http://localhost/status
+            ping_url: http://localhost/ping

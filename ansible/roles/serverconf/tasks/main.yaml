@@ -9,11 +9,22 @@
   - name: Copy nginx site config
     become: yes
     template: src=ad3media.com.j2
-              dest=/etc/nginx/sites-available/ad3media.com
+              dest=/etc/nginx/sites-available/{{ domain | default('ad3media.com') }}
 
   - name: Enable site config
     become: yes
-    file: src=/etc/nginx/sites-available/ad3media.com dest=/etc/nginx/sites-enabled/ad3media.com state=link
+    file: src=/etc/nginx/sites-available/{{ domain | default('ad3media.com') }} dest=/etc/nginx/sites-enabled/{{ domain | default('ad3media.com') }} state=link
+    notify:
+      - Reload Nginx
+
+  - name: Copy PHP-FPM status site config
+    become: yes
+    template: src=fpm-status.conf.j2
+              dest=/etc/nginx/sites-available/fpm-status.local
+
+  - name: Enable PHP-FPM status config
+    become: yes
+    file: src=/etc/nginx/sites-available/fpm-status.local dest=/etc/nginx/sites-enabled/fpm-status.local state=link
     notify:
       - Reload Nginx
 

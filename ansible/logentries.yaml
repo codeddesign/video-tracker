@@ -1,16 +1,16 @@
 ---
-- hosts: "{{ host | default('ad3production') }}"
-  vars_files:
-    - vars/secrets.yaml
-  roles:
-     - { role: ricbra.logentries, become: yes }
-  vars:
-    logentries_account_key: "{{ logentries_key }}"
-    logentries_logs:
-      - name: "Authentication"
-        path: "/var/log/auth.log"
-      - name: "Nginx"
-        path: "/var/log/nginx/ad3media.com-error.log"
-      - name: "PHP-FPM"
-        path: "/var/log/php7.1-fpm.log"
+  - hosts: "{{ host | default('ad3production') }}"
+    vars_files:
+      - vars/{{ env | default('production') }}.yaml
+    roles:
+       - { role: ricbra.logentries, become: yes }
+    vars:
+      logentries_account_key: "{{ logentries_key }}"
+      logentries_logs:
+        - name: "Authentication"
+          path: "/var/log/auth.log"
+        - name: "Nginx"
+          path: "/var/log/nginx/ad3media.com-error.log"
+        - name: "PHP-FPM"
+          path: "/var/log/php7.1-fpm.log"
 
