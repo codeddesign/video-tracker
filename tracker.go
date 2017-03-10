@@ -98,7 +98,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 
 	campaignRequiredParams := campaign != "" && source != "" && status != "" // && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
-	backupRequiredParams := source == "backup" && campaign != "" && platform != ""
+	backupRequiredParams := source == "backup" && campaign != "" && status != ""
 
 	// Required parameters
 	if !campaignRequiredParams && !analyticsRequiredParams && !backupRequiredParams {
@@ -122,7 +122,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if backupRequiredParams {
-		//saveBackupToRedis(campaign, website)
+		saveBackupToRedis(campaign, website, status)
 	}
 
 	exp_events_processed.Add(1)
@@ -139,8 +139,12 @@ func saveAnalyticsToRedis(website string, platform string) {
 	pipeline <- RedisCommand{"HINCRBY", "website:" + website, value, 1}
 }
 
-func saveBackupToRedis(campaign string, website string) {
+func saveBackupToRedis(campaign string, website string, status string) {
 	value := "source:backup"
+
+	if status != "" {
+		value += ":status:" + status
+	}
 
 	if website != "" {
 		value += ":website:" + website
