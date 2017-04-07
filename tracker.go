@@ -169,6 +169,7 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 
 		if source == "tag" {
 			pipeline <- RedisCommand{"HINCRBY", "tag_requests", tag, 1}
+			pipeline <- RedisCommand{"HINCRBY", "daily_tag_requests", tag, 1}
 		}
 	}
 
