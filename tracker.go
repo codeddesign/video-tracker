@@ -95,13 +95,14 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	platform := r.URL.Query().Get("platform")
 	website := r.URL.Query().Get("w")
 	tag := r.URL.Query().Get("tag")
+	backfill := r.URL.Query().Get("backfill")
 
 	campaignRequiredParams := campaign != "" && source != "" && status != "" // && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
-	backupRequiredParams := source == "backup" && campaign != "" && status != ""
+	backfillRequiredParams := source == "backfill" && campaign != "" && website != "" && backfill != ""
 
 	// Required parameters
-	if !campaignRequiredParams && !analyticsRequiredParams && !backupRequiredParams {
+	if !campaignRequiredParams && !analyticsRequiredParams && !backfillRequiredParams {
 		return
 	}
 
@@ -121,8 +122,8 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 		saveAnalyticsToRedis(website, platform)
 	}
 
-	if backupRequiredParams {
-		saveBackupToRedis(campaign, website, status)
+	if backfillRequiredParams {
+		saveBackfillToRedis(campaign, website, backfill)
 	}
 
 	exp_events_processed.Add(1)
@@ -139,15 +140,15 @@ func saveAnalyticsToRedis(website string, platform string) {
 	pipeline <- RedisCommand{"HINCRBY", "website:" + website, value, 1}
 }
 
-func saveBackupToRedis(campaign string, website string, status string) {
-	value := "source:backup"
-
-	if status != "" {
-		value += ":status:" + status
-	}
+func saveBackfillToRedis(campaign string, website string, backfill string) {
+	value := "source:backfill"
 
 	if website != "" {
 		value += ":website:" + website
+	}
+
+	if backfill != "" {
+		value += ":backfill:" + backfill
 	}
 
 	pipeline <- RedisCommand{"HINCRBY", "campaign:" + campaign, value, 1}
