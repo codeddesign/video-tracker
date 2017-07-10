@@ -1,21 +1,30 @@
 ---
-
 - name: Create the {{ goapp_path }} app folder
   file: path={{ goapp_path }}
-        owner=forge
-        group=forge
+        owner=ad3
+        group=ad3
         mode=0774
         state=directory
 
+- name: Create the SSH public key file
+  copy: content="{{ git_ssh_pub_key }}"
+        dest={{ root_application_path }}/.ssh/id_rsa.pub
+        mode=0644
+
+- name: Create the SSH private key file
+  copy: content="{{ git_ssh_priv_key }}"
+        dest={{ root_application_path }}/.ssh/id_rsa
+        mode=0600
+
 - name: Setup the Git repo
-  git: repo=git@github.com:codeddesign/video-tracker.git dest={{ goapp_path }} accept_hostkey=yes
+  git: repo=git@github.com:codeddesign/video-tracker.git dest={{ goapp_path }} accept_hostkey=yes version=master
 
 - name: Build the Go application {{ goapp_path }}
   command: chdir={{ goapp_path }} /usr/local/go/bin/go get
   environment: "{{ goapp_environment }}"
 
-- name: Set the environment variables
-  template: src=env.j2
+- name: Set the tracker environment variables
+  template: src=trackerenv.j2
             dest={{ goapp_path }}/bin/.env
 
 - name: Create the systemd service
@@ -30,3 +39,61 @@
     enabled: yes
     daemon_reload: yes
     name: video-tracker
+
+- name: Check if Composer is installed
+  stat: path=/usr/local/bin/composer
+  register: composer_installed
+
+- name: Install Composer
+  shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  when: composer_installed.stat.exists == False
+
+- name: Composer self-update
+  command: composer self-update
+  register: composer_update_result
+  changed_when: composer_update_result | success and 'already using composer version' not in composer_update_result.stderr
+
+- name: Create the {{ videoapp_path }} app folder
+  file: path={{ videoapp_path }}
+        owner=ad3
+        group=ad3
+        mode=0774
+        state=directory
+
+- name: Setup the Git repo
+  git: repo=git@github.com:codeddesign/videoapp-l53.git dest={{ videoapp_path }} accept_hostkey=yes
+
+- name: Set the app environment variables
+  template: src=appenv.j2
+            dest={{ videoapp_path }}/.env
+
+- name: Laravel Scheduler
+  cron: >
+    job="run-one php {{ videoapp_path }}/artisan schedule:run 1>> /dev/null 2>&1"
+    state=present
+    user=www-data
+    name="php artisan schedule:run"
+  become: true
+
+- name: Laravel Queue Worker
+  cron: >
+    job="run-one php {{ videoapp_path }}/artisan queue:work --daemon --sleep=30 --delay=60 --tries=3 1>> /dev/null 2>&1"
+    state=present
+    user=www-data
+    name="Laravel Queue Worker"
+  become: true
+
+- name: Install Composer packages
+  composer:
+    command: install
+    arguments: --no-interaction --prefer-dist --optimize-autoloader
+    working_dir: "{{ videoapp_path }}"
+
+- name: Run composer optimize
+  shell: cd {{ videoapp_path }} && composer optimize
+
+- name: Run migrations
+  shell: php {{ videoapp_path }}/artisan queue:restart
+
+- name: Restart queue workers
+  shell: php {{ videoapp_path }}/artisan queue:restart

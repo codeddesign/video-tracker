@@ -1,0 +1,41 @@
+APP_ENV=production
+APP_KEY={{ app_key }}
+APP_DEBUG=false
+APP_LOG_LEVEL=debug
+APP_URL=http://ad3media.com
+
+SOCKET_IO_IP=null
+
+JWT_SECRET={{ jwt_secret }}
+
+PLAYER_URL=http://dev1.ad3.io
+
+WEBPACK=false
+
+NEXMO_KEY={{ nexmo_key }}
+NEXMO_SECRET={{ nexmo_secret }}
+NEXMO_BRAND=Ad3
+
+DB_CONNECTION=pgsql
+DB_HOST={{ db_host }}
+DB_PORT={{ db_port }}
+DB_DATABASE={{ db_name }}
+DB_USERNAME={{ db_username }}
+DB_PASSWORD={{ db_password }}
+
+LOGENTRIES_TOKEN={{ logentries_token }}
+
+SENTRY_DSN={{ app_sentry_dsn }}
+
+CACHE_DRIVER=redis
+SESSION_DRIVER=file
+QUEUE_DRIVER=redis
+BROADCAST_DRIVER=redis
+
+REDIS_HOST={{ redis_host }}
+REDIS_PASSWORD={{ redis_password }}
+REDIS_PORT={{ redis_port }}
+
+MAIL_DRIVER=mailgun
+MAILGUN_SECRET={{ mailgun_secret }}
+MAILGUN_DOMAIN=ad3media.com
