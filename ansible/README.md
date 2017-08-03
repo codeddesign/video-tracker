@@ -11,6 +11,12 @@ This Go app is deployed using [Ansible](https://www.ansible.com/).
 3. A folder for custom roles should be created: ```mkdir ~/.ansible/roles``` and set in the config file ```/etc/ansible/ansible.cfg``` under the key ```roles_path```
 4. The following roles role should be installed by running:```ansible-galaxy install -r requirements.yml```.
 
+### Initial Server Configuration
+
+1. Create an user with the name ```ad3``` give it passwordless sudo permissions.
+
+2. Install Python using ```sudo apt-get install python```
+
 ### Install Logentries
 
 To install the Logentries daemon, our log management system, run ```ansible-playbook logentries.yaml```.

@@ -1,4 +1,25 @@
 ---
+- name: Install git
+  become: yes
+  apt:
+    name: git
+    update_cache: yes
+    state: present
+
+- name: Install curl
+  become: yes
+  apt:
+    name: curl
+    update_cache: yes
+    state: present
+
+- name: Install run-one
+  become: yes
+  apt:
+    name: run-one
+    update_cache: yes
+    state: present
+
 - name: Create the {{ goapp_path }} app folder
   file: path={{ goapp_path }}
         owner=ad3
@@ -15,6 +36,18 @@
   copy: content="{{ git_ssh_priv_key }}"
         dest={{ root_application_path }}/.ssh/id_rsa
         mode=0600
+
+- name: Copy the SSL certificate
+  become: yes
+  copy: src=files/ssl/a3m_io.pem
+        dest=/etc/ssl/a3m_io.pem
+        mode=0644
+
+- name: Create the SSL certificate key
+  become: yes
+  copy: content="{{ a3m_io_ssl_key }}"
+        dest=/etc/ssl/a3m_io.key
+        mode=0644
 
 - name: Setup the Git repo
   git: repo=git@github.com:codeddesign/video-tracker.git dest={{ goapp_path }} accept_hostkey=yes version=master
@@ -45,6 +78,7 @@
   register: composer_installed
 
 - name: Install Composer
+  become: yes
   shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   when: composer_installed.stat.exists == False
 
@@ -61,7 +95,7 @@
         state=directory
 
 - name: Setup the Git repo
-  git: repo=git@github.com:codeddesign/videoapp-l53.git dest={{ videoapp_path }} accept_hostkey=yes
+  git: repo=git@github.com:codeddesign/videoapp-l53.git dest={{ videoapp_path }} accept_hostkey=yes version=master
 
 - name: Set the app environment variables
   template: src=appenv.j2
@@ -91,6 +125,12 @@
 
 - name: Run composer optimize
   shell: cd {{ videoapp_path }} && composer optimize
+
+- name: Restart PHP
+  become: yes
+  service:
+    name: php7.1-fpm
+    state: restarted
 
 - name: Run migrations
   shell: php {{ videoapp_path }}/artisan queue:restart

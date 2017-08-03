@@ -7,6 +7,8 @@
       - joshualund.golang
     vars:
       nginx_sites: {}
+      nginx_official_repo: no
+      nginx_official_repo_mainline: yes
       php_packages:
         - php7.1-common
         - php7.1-cli
@@ -15,6 +17,8 @@
         - php7.1-cgi
         - php7.1-fpm
         - php7.1-opcache
+        - php7.1-simplexml
+        - php7.1-zip
         - php7.1-json
         - php7.1-readline
         - php7.1-pgsql
