@@ -177,7 +177,7 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 
 	// Save impression session ID
 	if source == "ad" && status == "3" {
-		impression := website + ":" + campaign + ":" + vuid
+		impression := website + ":" + campaign + ":" + tag + ":" + vuid
 		pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 1}
 	}
 
