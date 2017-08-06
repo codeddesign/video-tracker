@@ -120,7 +120,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if analyticsRequiredParams {
-		saveAnalyticsToRedis(website, platform)
+		saveAnalyticsToRedis(website, platform, campaign, vuid)
 	}
 
 	if backfillRequiredParams {
@@ -131,10 +131,14 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	imageResponse(w)
 }
 
-func saveAnalyticsToRedis(website string, platform string) {
+func saveAnalyticsToRedis(website string, platform string, campaign string, vuid string) {
 	if website == "" {
 		return
 	}
+
+	// Save session info
+	impression := website + ":" + campaign + ":" + platform + ":" + vuid
+	pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 0}
 
 	value := "platform:" + platform
 
