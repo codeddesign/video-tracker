@@ -125,7 +125,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if backfillRequiredParams {
-		saveBackfillToRedis(campaign, website, backfill)
+		saveBackfillToRedis(campaign, website, backfill, vuid)
 	}
 
 	exp_events_processed.Add(1)
@@ -138,16 +138,16 @@ func saveAnalyticsToRedis(website string, platform string, campaign string, vuid
 	}
 
 	// Save session info
-	impression := website + ":" + campaign + ":" + platform + ":" + vuid
-	pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 0}
-	pipeline <- RedisCommand{"HINCRBY", "extraimpressions", impression + ":" + ua, 0}
+	sessionInfo := website + ":" + campaign + ":" + platform + ":" + vuid
+	pipeline <- RedisCommand{"HINCRBY", "sessions", "visit:" + sessionInfo, 0}
+	pipeline <- RedisCommand{"HINCRBY", "extraimpressions", sessionInfo + ":" + ua, 0}
 
 	value := "platform:" + platform
 
 	pipeline <- RedisCommand{"HINCRBY", "website:" + website, value, 1}
 }
 
-func saveBackfillToRedis(campaign string, website string, backfill string) {
+func saveBackfillToRedis(campaign string, website string, backfill string, vuid string) {
 	value := "source:backfill"
 
 	if website != "" {
@@ -157,6 +157,10 @@ func saveBackfillToRedis(campaign string, website string, backfill string) {
 	if backfill != "" {
 		value += ":backfill:" + backfill
 	}
+
+
+	sessionInfo := website + ":" + campaign + ":" + backfill + ":" + vuid
+	pipeline <- RedisCommand{"HINCRBY", "sessions", "backfill:" + sessionInfo, 1}
 
 	pipeline <- RedisCommand{"HINCRBY", "campaign:" + campaign, value, 1}
 }
@@ -183,9 +187,9 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 
 	// Save impression session ID
 	if source == "ad" && status == "3" {
-		impression := website + ":" + campaign + ":" + tag + ":" + vuid
-		pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 1}
-		pipeline <- RedisCommand{"HINCRBY", "extraimpressions", impression + ":" + ua, 1}
+		sessionInfo := website + ":" + campaign + ":" + tag + ":" + vuid
+		pipeline <- RedisCommand{"HINCRBY", "sessions", "impression:" + sessionInfo, 1}
+		pipeline <- RedisCommand{"HINCRBY", "extraimpressions", sessionInfo + ":" + ua, 1}
 	}
 
 	if website != "" {
