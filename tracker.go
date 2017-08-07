@@ -97,6 +97,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	tag := r.URL.Query().Get("tag")
 	backfill := r.URL.Query().Get("backfill")
 	vuid := r.URL.Query().Get("vuid")
+	ua := base64.URLEncoding.EncodeToString([]byte(r.UserAgent()))
 
 	campaignRequiredParams := campaign != "" && source != "" && status != "" // && rd != ""
 	analyticsRequiredParams := source == "visit" && platform != "" && website != ""
@@ -116,11 +117,11 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if campaignRequiredParams {
-		saveCampaignToRedis(source, campaign, tag, status, website, vuid)
+		saveCampaignToRedis(source, campaign, tag, status, website, vuid, ua)
 	}
 
 	if analyticsRequiredParams {
-		saveAnalyticsToRedis(website, platform, campaign, vuid)
+		saveAnalyticsToRedis(website, platform, campaign, vuid, ua)
 	}
 
 	if backfillRequiredParams {
@@ -131,7 +132,7 @@ func handleTrackRequest(w http.ResponseWriter, r *http.Request) {
 	imageResponse(w)
 }
 
-func saveAnalyticsToRedis(website string, platform string, campaign string, vuid string) {
+func saveAnalyticsToRedis(website string, platform string, campaign string, vuid string, ua string) {
 	if website == "" {
 		return
 	}
@@ -139,6 +140,7 @@ func saveAnalyticsToRedis(website string, platform string, campaign string, vuid
 	// Save session info
 	impression := website + ":" + campaign + ":" + platform + ":" + vuid
 	pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 0}
+	pipeline <- RedisCommand{"HINCRBY", "extraimpressions", impression + ":" + ua, 0}
 
 	value := "platform:" + platform
 
@@ -159,7 +161,7 @@ func saveBackfillToRedis(campaign string, website string, backfill string) {
 	pipeline <- RedisCommand{"HINCRBY", "campaign:" + campaign, value, 1}
 }
 
-func saveCampaignToRedis(source string, campaign string, tag string, status string, website string, vuid string) {
+func saveCampaignToRedis(source string, campaign string, tag string, status string, website string, vuid string, ua string) {
 	if tag == "false" {
 		tag = ""
 	}
@@ -183,6 +185,7 @@ func saveCampaignToRedis(source string, campaign string, tag string, status stri
 	if source == "ad" && status == "3" {
 		impression := website + ":" + campaign + ":" + tag + ":" + vuid
 		pipeline <- RedisCommand{"HINCRBY", "impressions", impression, 1}
+		pipeline <- RedisCommand{"HINCRBY", "extraimpressions", impression + ":" + ua, 1}
 	}
 
 	if website != "" {
