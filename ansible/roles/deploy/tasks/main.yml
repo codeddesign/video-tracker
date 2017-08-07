@@ -83,6 +83,7 @@
   when: composer_installed.stat.exists == False
 
 - name: Composer self-update
+  become: yes
   command: composer self-update
   register: composer_update_result
   changed_when: composer_update_result | success and 'already using composer version' not in composer_update_result.stderr
