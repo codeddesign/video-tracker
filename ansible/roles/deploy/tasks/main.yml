@@ -65,7 +65,7 @@
   template: src=video-tracker.service.j2
             dest=/etc/systemd/system/video-tracker.service
 
-- name: Enable the systemd service
+- name: Restart the video-tracker service
   become: yes
   systemd:
     state: restarted
