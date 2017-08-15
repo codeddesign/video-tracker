@@ -106,7 +106,7 @@
   cron: >
     job="run-one php {{ videoapp_path }}/artisan schedule:run 1>> /dev/null 2>&1"
     state=present
-    user=www-data
+    user=ad3
     name="php artisan schedule:run"
   become: true
 
@@ -114,7 +114,7 @@
   cron: >
     job="run-one php {{ videoapp_path }}/artisan queue:work --daemon --sleep=30 --delay=60 --tries=3 1>> /dev/null 2>&1"
     state=present
-    user=www-data
+    user=ad3
     name="Laravel Queue Worker"
   become: true
 
@@ -134,7 +134,7 @@
     state: restarted
 
 - name: Run migrations
-  shell: php {{ videoapp_path }}/artisan queue:restart
+  shell: php {{ videoapp_path }}/artisan migrate --force
 
 - name: Restart queue workers
   shell: php {{ videoapp_path }}/artisan queue:restart
